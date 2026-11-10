@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Front desk monitor</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css?v=5">
+</head>
+<body>
+<header class="bar">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 40 24" aria-hidden="true"><path d="M2 12C8 3 32 3 38 12C32 21 8 21 2 12Z"/><circle cx="20" cy="12" r="6"/><circle cx="20" cy="12" r="2.4"/></svg>
+    <div>
+      <h1>Front desk monitor</h1>
+      <p class="sub">Demo Eye and Retina Clinic: calls and WhatsApp chats as they happen</p>
+    </div>
+  </div>
+  <nav class="tabs" aria-label="View">
+    <button class="tab" data-view="live" aria-pressed="true">Live</button>
+    <button class="tab" data-view="history" aria-pressed="false">History</button>
+  </nav>
+  <div class="today" id="today" aria-live="off"></div>
+  <button class="assist-btn" id="assistMode" aria-pressed="false">Open Agent Assist Mode</button>
+  <button class="theme" id="theme" aria-label="Switch light or dark">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg>
+  </button>
+  <span class="conn" id="conn" role="status">Connecting</span>
+</header>
+
+<main id="live" class="live">
+  <aside class="rail" aria-label="Sessions">
+    <h2>Live now</h2>
+    <ul id="liveList" class="sessions"></ul>
+    <h2>Just ended</h2>
+    <ul id="endedList" class="sessions ended"></ul>
+  </aside>
+
+  <section class="stage" id="stage" aria-label="Selected session">
+    <section class="assist" id="assistCard" hidden aria-live="polite" aria-labelledby="assistTitle">
+      <div class="assist-head">
+        <h2 id="assistTitle">Suggested reply</h2>
+        <span class="chip" id="assistKind"></span>
+        <span class="assist-why" id="assistWhy"></span>
+      </div>
+      <p class="say" id="assistSay"></p>
+      <div class="assist-grid">
+        <div>
+          <h3>Facts you may need</h3>
+          <ul class="assist-facts" id="assistFacts"></ul>
+        </div>
+        <div>
+          <h3>Booking details heard</h3>
+          <dl class="assist-form" id="assistForm"></dl>
+        </div>
+      </div>
+    </section>
+
+    <div class="eye">
+      <div class="iris-wrap">
+        <canvas id="iris" aria-hidden="true"></canvas>
+      </div>
+      <div class="readout">
+        <p class="who" id="who">No call or chat right now</p>
+        <p class="mood" id="moodWord">Waiting</p>
+        <p class="why" id="moodWhy">The iris turns blue when a patient is calm or happy and red when they are upset. Louder speech makes it pulse.</p>
+        <dl class="facts" id="facts"></dl>
+      </div>
+    </div>
+
+    <figure class="chart" id="moodChart">
+      <figcaption>
+        <span class="title">Mood through the conversation</span>
+        <span class="hint">each dot is one thing the patient said</span>
+      </figcaption>
+      <div class="plot" id="moodPlot"></div>
+    </figure>
+
+    <div class="transcript-head">
+      <h2>Conversation</h2>
+      <p class="state" id="botState"></p>
+    </div>
+    <ol class="transcript" id="transcript" aria-live="polite"></ol>
+    <p class="caption" id="caption" aria-live="off"></p>
+  </section>
+
+  <aside class="side" aria-label="Script and quality">
+    <section>
+      <div class="side-head">
+        <h2 id="checklistName">Call script</h2>
+        <span class="score" id="sopScore"></span>
+      </div>
+      <ol class="checklist" id="steps"></ol>
+      <h3>Only if it comes up</h3>
+      <ul class="checklist" id="whens"></ul>
+      <h3>Rules for the whole conversation</h3>
+      <ul class="checklist" id="rules"></ul>
+    </section>
+    <section>
+      <div class="side-head"><h2>Reply speed</h2><span class="score" id="speedNote"></span></div>
+      <div class="plot" id="speedPlot"></div>
+    </section>
+    <section>
+      <h2>Alerts</h2>
+      <ul class="alerts" id="alerts"><li class="empty">Nothing needs attention.</li></ul>
+    </section>
+  </aside>
+</main>
+
+<main id="assistView" class="assist-view" hidden aria-label="Agent assist mode">
+  <p class="av-status" id="avStatus"></p>
+  <div class="av-alert" id="avAlert" hidden role="alert"></div>
+  <section class="av-say" id="avSayCard" aria-live="polite" aria-labelledby="avSayLabel">
+    <div class="av-label"><h2 id="avSayLabel">Say this</h2><span class="chip" id="avKind"></span></div>
+    <p class="av-say-text" id="avSay"></p>
+    <p class="av-why" id="avWhy"></p>
+  </section>
+  <section class="av-know" id="avKnow" hidden aria-live="polite" aria-labelledby="avKnowLabel">
+    <div class="av-label">
+      <h2 id="avKnowLabel">General knowledge</h2>
+      <span class="chip">Not the clinic's own figure</span>
+      <span class="chip approx" id="avKnowApprox" hidden>Approximate</span>
+    </div>
+    <p class="av-know-q" id="avKnowQ"></p>
+    <p class="av-know-a" id="avKnowA"></p>
+    <ul class="av-know-points" id="avKnowPoints"></ul>
+    <p class="av-know-confirm" id="avKnowConfirm"></p>
+  </section>
+  <section class="av-asked" aria-labelledby="avAskedLabel">
+    <h2 id="avAskedLabel">The patient just said</h2>
+    <p id="avAsked"></p>
+  </section>
+  <div class="av-grid">
+    <section>
+      <h2>Facts you may need</h2>
+      <ul class="assist-facts" id="avFacts"></ul>
+    </section>
+    <section>
+      <h2>Booking details heard</h2>
+      <dl class="assist-form" id="avForm"></dl>
+    </section>
+  </div>
+  <section>
+    <h2>Recent conversation</h2>
+    <ol class="av-lines" id="avLines"></ol>
+  </section>
+</main>
+
+<main id="history" class="history" hidden>
+  <div class="filters" role="group" aria-label="Filter sessions">
+    <label>Script
+      <select id="hDirection">
+        <option value="all">Inbound and outbound</option>
+        <option value="inbound">Inbound</option>
+        <option value="outbound">Outbound</option>
+      </select>
+    </label>
+    <label>Channel
+      <select id="hChannel">
+        <option value="all">Calls and chats</option>
+        <option value="phone">Phone calls</option>
+        <option value="whatsapp">WhatsApp chats</option>
+        <option value="assist">Agent-assisted calls</option>
+      </select>
+    </label>
+  </div>
+  <div class="stats" id="hStats"></div>
+  <div class="history-grid">
+    <figure class="chart">
+      <figcaption>
+        <span class="title">Where conversations stop following the script</span>
+        <span class="hint" id="funnelHint">share of conversations that completed each step, in script order</span>
+      </figcaption>
+      <div class="plot" id="funnel"></div>
+    </figure>
+    <figure class="chart">
+      <figcaption>
+        <span class="title">Script score and mood, newest last</span>
+        <span class="hint">one mark per conversation</span>
+      </figcaption>
+      <div class="plot" id="trend"></div>
+    </figure>
+  </div>
+  <div class="table-wrap">
+    <table class="table" id="hTable">
+      <thead><tr>
+        <th scope="col">When</th><th scope="col">Channel</th><th scope="col">Caller</th>
+        <th scope="col">Outcome</th><th scope="col" class="num">Script</th><th scope="col">Mood</th>
+        <th scope="col" class="num">Length</th><th scope="col" class="num">Reply</th><th scope="col" class="num">Cost</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</main>
+
+<div class="toasts" id="toasts" role="status" aria-live="assertive"></div>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<script type="module" src="/static/app.js?v=5"></script>
+</body>
+</html>

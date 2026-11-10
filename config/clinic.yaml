@@ -1,0 +1,167 @@
+# Everything the bot is allowed to say about the clinic lives here.
+# This is a FICTIONAL demo clinic: the name, doctor, address and numbers are made up.
+# Replace this file with your clinic's real data.
+# The bot never invents doctors, fees, timings or numbers: if it is not in this file,
+# it says the team will tell them / offers a callback.
+#
+# Kept out on purpose, to show how the bot behaves without them (it never states them):
+#   - opening days and hours          -> left empty: "our team will confirm the timing"
+#   - Dr. Mehta's OPD days and times -> booking.mode: request (the team confirms the time)
+#   - how long a visit takes          -> consultation.duration_text left empty
+#   - insurance / TPA / cashless list -> the billing desk confirms
+#   - department phone numbers / SIP  -> transfers become callbacks
+#   - an after-hours emergency number
+# Still to be signed off by Dr. Mehta's team before go-live: the emergency wording below.
+placeholder_data: false
+
+sources:
+  - "Fictional demo data in the shape of a real clinic's website (not a real clinic)"
+  - "Front Desk SOP: Call & Enquiry Handling (greeting, details, tone, closing)"
+
+clinic:
+  # spoken form ("&" is written out so every voice says it the same way)
+  name: "Demo Eye and Retina Clinic"
+  name_hi: "डेमो आई एंड रेटिना क्लिनिक"
+  description: "an eye and retina hospital in Green Park, New Delhi, led by Dr. Arjun Mehta"
+  # SOP: "This is [Name] speaking. I am part of Dr. Arjun Mehta's team."
+  team: "Dr. Arjun Mehta's team"
+  timezone: "Asia/Kolkata"
+  # SOP: close by repeating the details back (the confirmation does that) and
+  # "Thank you for calling."
+  booking_closing_line: "Thank you for calling Demo Eye and Retina Clinic. You were speaking with {persona}. We look forward to taking care of you."
+  closing_line: "Thank you for calling Demo Eye and Retina Clinic. You were speaking with {persona}. Take care, and have a good day."
+  outbound_closing_line: "Thank you for your time. You were speaking with {persona} from Demo Eye and Retina Clinic. Take care, and have a good day."
+  # Say "virtual assistant" in the greeting. The bot ALWAYS admits it is an AI if asked.
+  disclose_ai_in_greeting: true
+  consultation:
+    # Not published: the confirmation leaves the visit length out.
+    duration_text: ""
+    includes_registration: false
+    # what the consultation charge covers (pricing page: "Dilated Eye Examination,
+    # Refraction & Consultation")
+    fee_covers: "the dilated eye check-up and refraction"
+  # SOP preparation instructions: bring reports, arrive early, dilation if needed.
+  preparation: >-
+    Please bring your previous eye reports, prescriptions and medicines list, and come
+    fifteen minutes early.
+  dilation_advice: >-
+    Your eyes may be dilated, so please don't drive back alone; bring someone along.
+  sms_confirmation: true
+
+personas:
+  inbound:
+    name: "Clara"
+  outbound:
+    name: "Clara"
+
+# Dr. Mehta's OPD timings are not published, so the bot takes an appointment REQUEST
+# (patient, preferred day and time of day) and the team calls the patient back to confirm
+# the exact time. Every request is written to logs/notifications.jsonl and POSTed to
+# NOTIFY_WEBHOOK_URL if set.
+booking:
+  mode: request
+  # used only for a centre without consultation_fee_inr
+  fee_note: >-
+    Our team will tell you the exact charges when they call to confirm.
+
+# Phone numbers are written in the groups they are spoken in.
+# open_days / hours: not published. Fill them in when the clinic confirms them, e.g.
+#   open_days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+#   hours: "10 AM to 6 PM"
+locations:
+  - id: "greenpark"
+    name: "Green Park"
+    area: "Green Park, New Delhi"
+    address: "Level 2, A-14 Green Park Main, New Delhi 110016"
+    landmark: "on Aurobindo Marg; the nearest metro is Green Park"
+    phones: ["98765 43210"]
+    # SOP: shared only after the caller's problem is understood (see the prompt rules)
+    consultation_fee_inr: 1700
+    open_days: []
+    hours: ""
+
+doctors:
+  - id: "arjun-mehta"
+    name: "Dr. Arjun Mehta"
+    title: "Founder and Director, retina and cataract surgeon"
+    specialties: ["Retina and Vitreous", "Cataract surgery", "Diabetic eye care", "Macular degeneration"]
+    location_ids: ["greenpark"]
+
+# SOP request types: appointment, general query, emergency, billing.
+# Demo Clinic publishes no department numbers, so no live transfers yet: the bot offers a
+# callback (written to logs/notifications.jsonl / NOTIFY_WEBHOOK_URL). To enable a warm
+# transfer, put the number in sip_call_to and set LIVEKIT_SIP_OUTBOUND_TRUNK.
+departments:
+  - id: "coordinator"
+    name: "Patient coordinator"
+    handles: "rescheduling or cancelling an appointment, reports, prescriptions and the doctor's instructions, follow-up visits, surgery dates, video consultations, international patients, and anything else you cannot answer"
+    sip_call_to: ""
+  - id: "billing"
+    name: "Billing desk"
+    handles: "bills, payments and refunds, insurance, TPA and cashless questions, and the cost of a surgery, injection, laser or test"
+    sip_call_to: ""
+  - id: "emergency"
+    name: "Emergency"
+    handles: "eye injury, chemical splash, sudden loss of vision, a curtain or shadow over the vision, severe eye pain, problems after surgery or an injection"
+    sip_call_to: ""
+
+# Emergency red flags. On any of these the bot stops the booking flow, alerts staff
+# (emergency_alert notification) and gives the advice below.
+# >>> Have Dr. Mehta's team approve this wording before go-live. <<<
+emergency:
+  red_flags:
+    - "sudden loss or sudden drop of vision in one or both eyes"
+    - "a curtain or shadow over the vision, or a sudden shower of floaters and flashes"
+    - "chemical, acid or lime (chuna) splash in the eye"
+    - "injury to the eye, something stuck in or hit the eye"
+    - "severe eye pain, especially with headache, nausea or vomiting"
+    - "severe pain, redness, discharge or drop in vision after eye surgery or an eye injection"
+  advice: >-
+    This needs urgent attention. Please go to the nearest eye emergency or
+    hospital emergency right away. For a chemical splash, keep rinsing the eye
+    with plenty of clean running water while someone takes you there. Do not rub
+    the eye.
+  contact_line: "You can also call Demo Eye and Retina Clinic on 9 8 7 6 5, 4 3 2 1 0."
+
+contacts:
+  - "Phone and WhatsApp for appointments and all enquiries: 98765 43210."
+  - "Email: hello@example.com (say: hello at example dot com)."
+  - "Appointments can also be requested on the website, example.com."
+
+facts:
+  - "Demo Eye and Retina Clinic has one clinic, at Green Park, New Delhi."
+  - "It is led by its founder and director, Dr. Arjun Mehta, a retina and cataract surgeon."
+  - "Treatments: cataract surgery, including bladeless laser cataract surgery; retina surgery such as vitrectomy, macular hole and retinal detachment surgery; macular degeneration treatment; eye injections for macular degeneration, diabetic retinopathy and retinal vein occlusion; diabetic eye care; specs removal by LASIK, SMILE or ICL; squint, glaucoma and oculoplasty surgery."
+  - "Tests available: OCT scan, retina photography and ultrasound A and B scans."
+  - "Video consultations with the doctor are available."
+  - "International patients get help with scheduling, travel and visa guidance, hotel arrangements and follow-up after the procedure."
+  - "Surgery packages generally include the consultation, the surgery, medicines and follow-up visits. The cost depends on the procedure and the lens or medicine chosen, so the doctor advises after examining the eye and the team then shares the exact cost."
+  - "The patient support team speaks several languages, including Hindi and English."
+
+insurance:
+  notes:
+    - "Insurance, TPA and cashless questions are answered by the billing desk: Demo Clinic has not published which insurers or TPAs it works with, so never say whether a policy is accepted."
+  tpas: []
+
+# Hold SOP: only announce a hold if a lookup is still running after a moment.
+hold:
+  first_notice_after_s: 2.0
+  checkin_every_s: 20.0
+  # Never hold more than a minute; after this, offer a callback.
+  max_hold_s: 60.0
+  music_volume: 0.25
+
+transfer:
+  ringing_timeout_s: 25.0
+
+# Outbound calls.
+outbound:
+  # Do not dial outside these local hours.
+  calling_window: { start: "09:00", end: "21:00" }
+  ring_timeout_s: 40.0
+
+# Call safety limits.
+limits:
+  max_call_minutes: 15
+  # After the caller goes silent: how many "are you there?" prompts before hanging up.
+  silence_prompts_before_hangup: 2

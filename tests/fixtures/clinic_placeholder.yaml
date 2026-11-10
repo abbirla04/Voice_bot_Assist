@@ -1,0 +1,175 @@
+# TEST FIXTURE: the old sample clinic (fake doctors, fees and slot timings).
+# The unit/flow tests use it to exercise the slot-booking mode; the bot itself
+# runs on config/clinic.yaml (the demo clinic, appointment-request mode).
+#
+# Everything the bot is allowed to say about the clinic lives here.
+# The bot never invents doctors, fees, timings or numbers: if it is not in this
+# file (or returned by the scheduling backend), it says it will find out / call back.
+#
+# !!! PLACEHOLDER DATA !!!
+# Doctors, locations, fees, slot timings and department phone numbers below are
+# NOT any clinic's real data. They exist so the bot can be tested end to end.
+# `placeholder_data: true` makes the agent refuse to run in production mode
+# (`python src/agent.py start`) unless ALLOW_PLACEHOLDER_DATA=1 is set.
+placeholder_data: true
+
+clinic:
+  name: "Sample Eye Clinic"
+  timezone: "Asia/Kolkata"
+  # Closing lines: one after a booking, one for any other inbound call, one outbound.
+  booking_closing_line: "Thank you for choosing Sample Eye Clinic for your treatment. You were speaking with {persona}. Wish you a lovely day ahead."
+  closing_line: "Thank you for calling Sample Eye Clinic. You were speaking with {persona}. Wish you a lovely day ahead."
+  outbound_closing_line: "Thank you for your time and for connecting with Sample Eye Clinic. You were speaking with {persona}. Wish you a lovely day ahead."
+  # Say "virtual assistant" in the greeting. The bot will ALWAYS admit it is an AI
+  # if asked, regardless of this flag.
+  disclose_ai_in_greeting: true
+  consultation:
+    # spoken in the confirmation: "The consultation takes <this>, so please plan your day."
+    # (script: "approximately one to three hours covering vision analysis, work-up,
+    # consultation and any further investigations if required")
+    duration_text: "about one to three hours, including vision analysis, work-up and consultation"
+    includes_registration: true
+  dilation_advice: >-
+    If your eyes are dilated, you will not be able to drive back on your own, so
+    please bring someone along, who can also help you understand the doctor's prescription.
+  sms_confirmation: true
+
+personas:
+  inbound:
+    name: "Clara"
+  outbound:
+    name: "Clara"
+
+locations:
+  - id: "central-delhi"
+    name: "Central Delhi centre"
+    area: "PLACEHOLDER address, Central Delhi"
+    consultation_fee_inr: 1800
+    open_days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    hours: "9 AM to 6 PM"
+  - id: "south-delhi"
+    name: "South Delhi centre"
+    area: "PLACEHOLDER address, South Delhi"
+    consultation_fee_inr: 1800
+    open_days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    hours: "9 AM to 6 PM"
+  - id: "noida"
+    name: "Noida centre"
+    area: "PLACEHOLDER address, Noida"
+    consultation_fee_inr: 1500
+    open_days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    hours: "10 AM to 5 PM"
+
+doctors:
+  - id: "dr-mehta"
+    name: "Dr. Anjali Mehta"
+    specialty: "Cornea and Cataract"
+    location_id: "central-delhi"
+    days: ["Mon", "Wed", "Fri"]
+    slots: { start: "09:30", end: "13:00", every_min: 30 }
+  - id: "dr-khanna"
+    name: "Dr. Rohit Khanna"
+    specialty: "Retina"
+    location_id: "central-delhi"
+    days: ["Tue", "Thu", "Sat"]
+    slots: { start: "10:00", end: "14:00", every_min: 30 }
+  - id: "dr-sethi"
+    name: "Dr. Priya Sethi"
+    specialty: "Glaucoma"
+    location_id: "south-delhi"
+    days: ["Mon", "Tue", "Thu"]
+    slots: { start: "11:00", end: "16:00", every_min: 30 }
+  - id: "dr-bose"
+    name: "Dr. Vikram Bose"
+    specialty: "Paediatric Ophthalmology and Squint"
+    location_id: "south-delhi"
+    days: ["Wed", "Fri", "Sat"]
+    slots: { start: "09:00", end: "12:30", every_min: 30 }
+  - id: "dr-arora"
+    name: "Dr. Neha Arora"
+    specialty: "General Ophthalmology"
+    location_id: "noida"
+    days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    slots: { start: "10:00", end: "16:30", every_min: 30 }
+
+# Warm-transfer targets. `sip_call_to` is dialled through your Exotel outbound
+# trunk (LIVEKIT_SIP_OUTBOUND_TRUNK). Leave it empty to disable that department;
+# the bot will then offer a callback instead of transferring.
+departments:
+  - id: "appointments"
+    name: "Appointments desk"
+    handles: "rescheduling or cancelling existing appointments, group or corporate bookings, anything the bot cannot book itself"
+    sip_call_to: ""
+    hours: { days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], start: "09:00", end: "19:00" }
+  - id: "billing"
+    name: "Billing and insurance (TPA)"
+    handles: "bills already raised, refunds, insurance, cashless or TPA approvals"
+    sip_call_to: ""
+    hours: { days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], start: "09:30", end: "18:00" }
+  - id: "surgery-counselling"
+    name: "Surgery counselling"
+    handles: "surgery costs and packages, cataract, LASIK, retina or other surgery planning, lens options, surgery dates"
+    sip_call_to: ""
+    hours: { days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], start: "09:30", end: "18:00" }
+  - id: "reports"
+    name: "Medical records and reports"
+    handles: "test reports, discharge summaries, prescriptions, medical certificates"
+    sip_call_to: ""
+    hours: { days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], start: "10:00", end: "17:00" }
+  - id: "optical"
+    name: "Optical store"
+    handles: "spectacles, contact lenses, frame orders and deliveries"
+    sip_call_to: ""
+    hours: { days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], start: "10:00", end: "19:00" }
+  - id: "emergency"
+    name: "Emergency desk"
+    handles: "eye injury, chemical splash, sudden loss of vision, severe eye pain, problems after surgery"
+    sip_call_to: ""
+    hours: { days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], start: "00:00", end: "23:59" }
+
+# Emergency red flags. On any of these the bot stops the booking flow, gives the
+# advice below and offers an immediate transfer to the emergency desk.
+# (sample wording)
+emergency:
+  red_flags:
+    - "sudden loss or sudden drop of vision in one or both eyes"
+    - "chemical, acid or lime (chuna) splash in the eye"
+    - "injury to the eye, something stuck in or hit the eye"
+    - "severe eye pain, especially with headache, nausea or vomiting"
+    - "a curtain or shadow over the vision, or a sudden shower of floaters and flashes"
+    - "severe pain, redness, discharge or drop in vision after eye surgery"
+  advice: >-
+    This needs urgent attention. Please go to the nearest eye emergency or
+    hospital emergency right away. For a chemical splash, keep rinsing the eye
+    with plenty of clean running water while someone takes you there. Do not rub
+    the eye.
+  # Spoken after the advice when live transfer to the emergency desk is not possible.
+  # Put the real 24x7 emergency number / centre here. Empty = not spoken.
+  contact_line: ""
+
+# Hold SOP ("Scripts for Holding the call").
+hold:
+  # Only announce a hold if a lookup is still running after this many seconds.
+  first_notice_after_s: 2.0
+  # Keep informing the caller during the hold.
+  checkin_every_s: 20.0
+  # Never hold more than a minute; after this, offer a callback.
+  max_hold_s: 60.0
+  music_volume: 0.25
+
+# Transfer SOP ("Script for transferring the call").
+transfer:
+  # Ring the colleague this long before coming back to the caller.
+  ringing_timeout_s: 25.0
+
+# Outbound calls.
+outbound:
+  # Do not dial outside these local hours.
+  calling_window: { start: "09:00", end: "21:00" }
+  ring_timeout_s: 40.0
+
+# Call safety limits.
+limits:
+  max_call_minutes: 15
+  # After the caller goes silent: how many "are you there?" prompts before hanging up.
+  silence_prompts_before_hangup: 2
